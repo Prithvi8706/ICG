@@ -39,8 +39,10 @@ typedef struct {
 %define parse.error verbose
 %expect 0
 
-%token <str> ID NUM RELOP
-%token IF ELSE WHILE TRUE FALSE
+/* The quoted names are what syntax error messages show. */
+%token <str> ID "identifier" NUM "number" RELOP "relational operator"
+%token IF "if" ELSE "else" WHILE "while" TRUE "true" FALSE "false"
+%token AND "&&" OR "||" NOT "!"
 
 /* Dangling else: an else binds to the nearest if, because shifting ELSE
  * (higher precedence) beats reducing the else-less if rule. */
