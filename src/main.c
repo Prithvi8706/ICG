@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #include "quad.h"
 
@@ -41,6 +42,12 @@ int main(int argc, char **argv)
             perror(path);
             return 1;
         }
+    } else if (isatty(fileno(stdin))) {
+#ifdef _WIN32
+        fprintf(stderr, "Type a program, then press Ctrl+Z and Enter to compile it.\n");
+#else
+        fprintf(stderr, "Type a program, then press Ctrl+D to compile it.\n");
+#endif
     }
 
     if (yyparse() != 0)
