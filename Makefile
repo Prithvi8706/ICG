@@ -1,5 +1,7 @@
 # Build the generator and run every test with:  make test
 # On Windows use mingw32-make from Git Bash (the recipes need sh).
+# Without make, the same build is:
+#   flex lexer.l && bison -d parser.y && gcc lex.yy.c parser.tab.c -o icg
 
 ifeq ($(OS),Windows_NT)
 FLEX  ?= win_flex
@@ -12,18 +14,14 @@ EXE   :=
 endif
 
 CC     = gcc
-CFLAGS = -std=gnu99 -Wall -Wextra -g -Isrc -Ibuild
+CFLAGS = -std=gnu99 -Wall -Wextra -Wno-unused-function -g -Ibuild
 
-ICG  = icg$(EXE)
-# Not named *patch*.exe: Windows UAC treats such names as installers.
-UNIT = build/unit_lists$(EXE)
-OBJS = build/parser.tab.o build/lex.yy.o build/quad.o build/backpatch.o \
-       build/symtab.o build/main.o
+ICG = icg$(EXE)
 
 all: $(ICG)
 
-$(ICG): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $(OBJS)
+$(ICG): build/parser.tab.c build/lex.yy.c
+	$(CC) $(CFLAGS) -o $@ build/lex.yy.c build/parser.tab.c
 
 build/parser.tab.c build/parser.tab.h: src/parser.y | build
 	$(BISON) -d -o build/parser.tab.c src/parser.y
@@ -31,22 +29,10 @@ build/parser.tab.c build/parser.tab.h: src/parser.y | build
 build/lex.yy.c: src/lexer.l build/parser.tab.h | build
 	$(FLEX) -o $@ src/lexer.l
 
-build/%.o: build/%.c
-	$(CC) $(CFLAGS) -Wno-unused-function -c -o $@ $<
-
-build/%.o: src/%.c src/*.h | build
-	$(CC) $(CFLAGS) -c -o $@ $<
-
-build/main.o: build/parser.tab.h
-
-$(UNIT): tests/unit/test_backpatch.c build/quad.o build/backpatch.o
-	$(CC) $(CFLAGS) -o $@ $^
-
 build:
 	mkdir -p build
 
-test: $(ICG) $(UNIT)
-	./$(UNIT)
+test: $(ICG)
 	sh run_tests.sh ./$(ICG)
 
 clean:

@@ -12,8 +12,14 @@ Needs gcc, flex and bison. On Windows use `mingw32-make` from Git Bash
 
 ```sh
 make          # builds ./icg
-make test     # backpatch unit test + every tests/*.src against its .expected
+make test     # runs every tests/*.src against its .expected
 make clean
+```
+
+Without make, from `src/`:
+
+```sh
+flex lexer.l && bison -d parser.y && gcc lex.yy.c parser.tab.c -o icg
 ```
 
 ## Run
@@ -45,13 +51,11 @@ parenthesised conditions, `true`, `false`. These stop with
 
 ## Layout
 
+The whole generator is two files.
+
 | File | Contents |
 |------|----------|
 | `src/lexer.l` | tokens, line numbers |
-| `src/parser.y` | grammar, M / N markers, semantic actions |
-| `src/quad.c` | quad table, `emit()`, `newtemp()`, printing |
-| `src/backpatch.c` | `makelist`, `merge`, `backpatch` |
-| `src/symtab.c` | symbol table |
-| `src/main.c` | command line |
-| `tests/` | `NN_name.src` + `NN_name.expected`, unit test in `tests/unit/` |
+| `src/parser.y` | grammar, M / N markers and semantic actions; below the grammar, the helpers: quad table (`emit`, `newtemp`, printing), patch lists (`makelist`, `merge`, `backpatch`), symbol table and `main` |
+| `tests/` | `NN_name.src` + `NN_name.expected` |
 | `run_tests.sh` | diffs actual vs expected, fails on any `goto _` |
