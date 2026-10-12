@@ -1,0 +1,26 @@
+B -> E1 relop E2
+    makelist   {100}
+    makelist   {101}
+    emit       100: if a < b goto _
+    emit       101: goto _
+    emit       102: x = 1
+N -> e
+    makelist   {103}
+    emit       103: goto _
+    emit       104: x = 2
+S -> if ( B ) M1 S1 else N M2 S2
+    backpatch  {100} := 102
+    backpatch  {101} := 104
+    emit       105: y = x
+L -> L1 M S
+    backpatch  {103} := 105
+program -> L
+    emit       106: halt
+
+100: if a < b goto 102
+101: goto 104
+102: x = 1
+103: goto 105
+104: x = 2
+105: y = x
+106: halt
