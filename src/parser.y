@@ -57,7 +57,7 @@ PatchList *merge(PatchList *p1, PatchList *p2);
 void       backpatch(PatchList *p, int target);
 void       loop_begin(void);
 PatchList *loop_end(int continue_target);
-void       loop_jump(int is_break);
+void       loop_jump(int is_break, int line);
 void       rule(const char *production);
 void       symtab_insert(char *name, int line);
 
@@ -76,6 +76,7 @@ extern FILE *yyin;
 }
 
 %define parse.error verbose
+%locations   /* @n.first_line: the line of the n-th symbol */
 %expect 0
 
 /* The quoted names are what syntax error messages show. */
@@ -86,16 +87,15 @@ extern FILE *yyin;
 
 /* Dangling else: an else binds to the nearest if, because shifting ELSE
  * (higher precedence) beats reducing the else-less if rule. */
-%nonassoc LOWER_THAN_ELSE
-%nonassoc ELSE
+%precedence LOWER_THAN_ELSE
+%precedence ELSE
 
 %left OR
 %left AND
-%right NOT
-%nonassoc RELOP
+%precedence NOT
 %left '+' '-'
 %left '*' '/'
-%right UMINUS
+%precedence UMINUS
 
 %type <addr> E
 %type <b> B
@@ -154,14 +154,14 @@ S
                           emit_goto($8);
                           $$ = merge($6.falselist, loop_end($8)); }
     | BREAK ';'         { rule("S -> break ;");
-                          loop_jump(1); $$ = NULL; }
+                          loop_jump(1, @1.first_line); $$ = NULL; }
     | CONTINUE ';'      { rule("S -> continue ;");
-                          loop_jump(0); $$ = NULL; }
+                          loop_jump(0, @1.first_line); $$ = NULL; }
     | '{' L '}'         { $$ = $2; }
     ;
 
 A
-    : ID '=' E          { symtab_insert($1, yylineno);
+    : ID '=' E          { symtab_insert($1, @1.first_line);
                           emit(Q_COPY, NULL, $3, NULL, $1); }
     ;
 
@@ -200,7 +200,7 @@ E
     | '-' E %prec UMINUS
                         { $$ = newtemp(); emit(Q_UMINUS, NULL, $2, NULL, $$); }
     | '(' E ')'         { $$ = $2; }
-    | ID                { symtab_insert($1, yylineno); $$ = $1; }
+    | ID                { symtab_insert($1, @1.first_line); $$ = $1; }
     | NUM               { $$ = $1; }
     ;
 
@@ -338,7 +338,7 @@ char *newtemp(void)
     return name;
 }
 
-void print_tac(void)
+static void print_tac(void)
 {
     char text[256];
     for (int i = 0; i < nquads; i++) {
@@ -349,7 +349,7 @@ void print_tac(void)
 
 /* Quadruple form: conditional jumps use op "j<" etc., plain jumps "j",
  * and the result column holds the jump target. */
-void print_quads(void)
+static void print_quads(void)
 {
     char op[16], t[16];
     printf("%-5s %-7s %-7s %-7s %s\n", "#", "op", "arg1", "arg2", "result");
@@ -461,10 +461,10 @@ PatchList *loop_end(int continue_target)
     return l->breaks;
 }
 
-void loop_jump(int is_break)
+void loop_jump(int is_break, int line)
 {
     if (loops == NULL) {
-        fprintf(stderr, "line %d: %s outside a loop\n", yylineno,
+        fprintf(stderr, "line %d: %s outside a loop\n", line,
                 is_break ? "break" : "continue");
         exit(2);
     }
@@ -484,7 +484,8 @@ typedef struct Symbol {
     struct Symbol *next;
 } Symbol;
 
-static Symbol *symbols = NULL;
+static Symbol *symbols = NULL;          /* in the order names are first reduced */
+static Symbol **symbols_end = &symbols;
 
 void symtab_insert(char *name, int line)
 {
@@ -492,8 +493,17 @@ void symtab_insert(char *name, int line)
         if (strcmp(s->name, name) == 0)
             return;
     Symbol *s = malloc(sizeof *s);
-    *s = (Symbol){ name, line, symbols };
-    symbols = s;
+    *s = (Symbol){ name, line, NULL };
+    *symbols_end = s;
+    symbols_end = &s->next;
+}
+
+static void print_symbols(void)
+{
+    printf("%-12s %s\n", "name", "first line");
+    for (Symbol *s = symbols; s != NULL; s = s->next)
+        printf("%-12s %d\n", s->name, s->line);
+    printf("\n");
 }
 
 /* ---------- errors and main ---------- */
@@ -505,18 +515,19 @@ void yyerror(const char *msg)
 
 static void usage(void)
 {
-    fprintf(stderr, "usage: icg [--format=tac|quad] [--trace] [--step] [--stats] [file]\n"
+    fprintf(stderr, "usage: icg [--format=tac|quad] [--trace] [--step] [--symbols] [--stats] [file]\n"
                     "  reads stdin when no file is given\n"
-                    "  --trace  print every rule, emit, makelist, merge and backpatch\n"
-                    "  --step   like --trace, waiting for Enter after each step\n"
-                    "  --stats  print code size and patch-list usage to stderr\n");
+                    "  --trace    print every rule, emit, makelist, merge and backpatch\n"
+                    "  --step     like --trace, waiting for Enter after each step\n"
+                    "  --symbols  print the symbol table before the code\n"
+                    "  --stats    print code size and patch-list usage to stderr\n");
 }
 
 int main(int argc, char **argv)
 {
     const char *format = "tac";
     const char *path = NULL;
-    int stats = 0;
+    int stats = 0, symbols_wanted = 0;
 
     for (int i = 1; i < argc; i++) {
         if (strncmp(argv[i], "--format=", 9) == 0)
@@ -525,6 +536,8 @@ int main(int argc, char **argv)
             trace = 1;
         else if (strcmp(argv[i], "--step") == 0)
             trace = step = 1;
+        else if (strcmp(argv[i], "--symbols") == 0)
+            symbols_wanted = 1;
         else if (strcmp(argv[i], "--stats") == 0)
             stats = 1;
         else if (argv[i][0] == '-' || path != NULL) {
@@ -569,6 +582,8 @@ int main(int argc, char **argv)
 
     if (trace)
         printf("\n");
+    if (symbols_wanted)
+        print_symbols();
     if (strcmp(format, "quad") == 0)
         print_quads();
     else
