@@ -1,0 +1,12 @@
+name         first line
+a            1
+b            2
+x            1
+c            4
+y            3
+
+100: t1 = a + b
+101: x = t1
+102: t2 = c * x
+103: y = t2
+104: halt

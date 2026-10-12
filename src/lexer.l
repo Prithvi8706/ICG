@@ -10,6 +10,9 @@ static char *dup_text(void)
     strcpy(s, yytext);
     return s;
 }
+
+/* Each token's line, for @n in the grammars' actions. */
+#define YY_USER_ACTION yylloc.first_line = yylloc.last_line = yylineno;
 %}
 
 %option noyywrap yylineno nounput noinput

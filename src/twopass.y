@@ -42,7 +42,7 @@ Node *node(NodeKind kind, char *text, Node *a, Node *b, Node *c, Node *d);
 
 static int loop_depth = 0;   /* loops open while parsing, to reject a stray break */
 static Node *root = NULL;
-void check_in_loop(const char *what);
+void check_in_loop(const char *what, int line);
 
 int  yylex(void);
 void yyerror(const char *msg);
@@ -56,6 +56,7 @@ extern FILE *yyin;
 }
 
 %define parse.error verbose
+%locations   /* @n.first_line: the line of the n-th symbol */
 %expect 0
 
 /* Same tokens and names as parser.y, so lexer.l serves both. */
@@ -64,16 +65,15 @@ extern FILE *yyin;
 %token BREAK "break" CONTINUE "continue" TRUE "true" FALSE "false"
 %token AND "&&" OR "||" NOT "!"
 
-%nonassoc LOWER_THAN_ELSE
-%nonassoc ELSE
+%precedence LOWER_THAN_ELSE
+%precedence ELSE
 
 %left OR
 %left AND
-%right NOT
-%nonassoc RELOP
+%precedence NOT
 %left '+' '-'
 %left '*' '/'
-%right UMINUS
+%precedence UMINUS
 
 %type <node> L S A B E
 
@@ -103,9 +103,9 @@ S
     | FOR { loop_depth++; } '(' A ';' B ';' A ')' S
                         { loop_depth--;
                           $$ = node(N_FOR, NULL, $4, $6, $8, $10); }
-    | BREAK ';'         { check_in_loop("break");
+    | BREAK ';'         { check_in_loop("break", @1.first_line);
                           $$ = node(N_BREAK, NULL, NULL, NULL, NULL, NULL); }
-    | CONTINUE ';'      { check_in_loop("continue");
+    | CONTINUE ';'      { check_in_loop("continue", @1.first_line);
                           $$ = node(N_CONTINUE, NULL, NULL, NULL, NULL, NULL); }
     | '{' L '}'         { $$ = $2; }
     ;
@@ -150,10 +150,10 @@ Node *node(NodeKind kind, char *text, Node *a, Node *b, Node *c, Node *d)
     return n;
 }
 
-void check_in_loop(const char *what)
+void check_in_loop(const char *what, int line)
 {
     if (loop_depth == 0) {
-        fprintf(stderr, "line %d: %s outside a loop\n", yylineno, what);
+        fprintf(stderr, "line %d: %s outside a loop\n", line, what);
         exit(2);
     }
 }

@@ -36,6 +36,7 @@ bison -d -o parser.tab.c twopass.y && gcc lex.yy.c parser.tab.c -o twopass
 ./icg --trace tests/03_if_else.src      # every rule, emit, makelist, merge, backpatch
 ./icg --step tests/03_if_else.src       # same, waiting for Enter after each step
 ./icg --stats tests/06_nested.src       # code size and patch-list usage (stderr)
+./icg --symbols tests/18_symbols.src    # symbol table (name, first line), then the code
 ./icg < program.src                     # read stdin
 
 ./twopass tests/04_while.src                # same code as icg
@@ -91,7 +92,8 @@ expected), and `break` or `continue` outside a loop.
 
 ## Backpatching vs. two passes
 
-Both programs print identical code for every test; the difference is when
+Both programs print identical output, error messages included, for every
+test without options; the difference is when
 jump targets become known and what is held in memory until then.
 
 | Program | `icg` (backpatching) | `twopass` (labels) |
