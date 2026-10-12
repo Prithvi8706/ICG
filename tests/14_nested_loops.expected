@@ -1,0 +1,18 @@
+100: if i < n goto 102
+101: goto 117
+102: j = 0
+103: if j < m goto 105
+104: goto 111
+105: if j == i goto 107
+106: goto 108
+107: goto 111
+108: t1 = j + 1
+109: j = t1
+110: goto 103
+111: if j > 3 goto 113
+112: goto 114
+113: goto 100
+114: t2 = i + 1
+115: i = t2
+116: goto 100
+117: halt

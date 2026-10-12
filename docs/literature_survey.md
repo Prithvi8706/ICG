@@ -19,7 +19,7 @@ library copy before they are quoted in the final report.
    Translates conditionals into IR trees whose jumps name symbolic labels;
    targets are resolved when labels are placed, not by patching instruction
    numbers. This is the main alternative to backpatching and the basis of the
-   two-pass baseline planned for Review 3.
+   two-pass baseline (`src/twopass.y`).
 
 3. **K. D. Cooper, L. Torczon.** *Engineering a Compiler*, 2nd ed. Morgan
    Kaufmann, 2011. Ch. 7 (code shape).
@@ -43,7 +43,8 @@ library copy before they are quoted in the final report.
 6. **S. H. Rodger, T. W. Finley.** *JFLAP: An Interactive Formal Languages and
    Automata Package*. Jones and Bartlett, 2006.
    Precedent for interactive visual tools in theory-of-computation teaching.
-   Supports the trace viewer planned as this project's novelty.
+   Supports the step-by-step trace (`--trace`, `--step`) that is this
+   project's novelty.
 
 ## Comparison of approaches
 

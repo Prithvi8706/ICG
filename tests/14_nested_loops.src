@@ -1,0 +1,9 @@
+while (i < n) {
+    j = 0;
+    while (j < m) {
+        if (j == i) break;
+        j = j + 1;
+    }
+    if (j > 3) continue;
+    i = i + 1;
+}

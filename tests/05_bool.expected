@@ -1,0 +1,8 @@
+100: if a < b goto 102
+101: goto 104
+102: if c > d goto 106
+103: goto 104
+104: if e == f goto 107
+105: goto 106
+106: x = 1
+107: halt

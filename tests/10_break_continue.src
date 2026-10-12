@@ -1,0 +1,6 @@
+for (i = 0; i < n; i = i + 1) {
+    if (i == k) continue;
+    if (s > 100) break;
+    s = s + i;
+}
+t = s;

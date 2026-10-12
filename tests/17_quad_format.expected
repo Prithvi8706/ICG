@@ -1,0 +1,9 @@
+#     op      arg1    arg2    result
+100   =       0               i
+101   j<      i       n       103
+102   j                       106
+103   +       i       1       t1
+104   =       t1              i
+105   j                       101
+106   =       1               done
+107   halt                    

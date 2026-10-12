@@ -23,6 +23,10 @@ static char *dup_text(void)
 "if"                    return IF;
 "else"                  return ELSE;
 "while"                 return WHILE;
+"do"                    return DO;
+"for"                   return FOR;
+"break"                 return BREAK;
+"continue"              return CONTINUE;
 "true"                  return TRUE;
 "false"                 return FALSE;
 
