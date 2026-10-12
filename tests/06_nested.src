@@ -1,0 +1,7 @@
+while (i < 10) {
+    if (i > 5) {
+        if (i == 7) x = 1; else x = 2;
+    } else y = i;
+    i = i + 1;
+}
+z = 0;

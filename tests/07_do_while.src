@@ -1,0 +1,5 @@
+do {
+    s = s + i;
+    i = i + 1;
+} while (i <= n);
+t = s;

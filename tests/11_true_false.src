@@ -1,0 +1,3 @@
+if (true) x = 1;
+while (false) y = 2;
+if (!true || false) z = 3;
