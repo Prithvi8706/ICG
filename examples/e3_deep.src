@@ -1,0 +1,15 @@
+// three loop kinds nested, break and continue at different depths
+do {
+    i = 0;
+    while (i < n) {
+        for (j = 0; j < m; j = j + 1) {
+            if (a == j) continue;
+            if (b == j && c > 0) break;
+            s = s + i * j;
+        }
+        if (s > lim) break;
+        i = i + 1;
+    }
+    k = k - 1;
+} while (k > 0 && !(s == lim));
+done = 1;

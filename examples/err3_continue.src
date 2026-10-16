@@ -1,0 +1,4 @@
+x = 0;
+if (x < 5) {
+    continue;
+}

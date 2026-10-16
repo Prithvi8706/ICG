@@ -1,0 +1,4 @@
+while (i < n) {
+    if (i == k) break;
+    i = i + 1;
+}

@@ -1,0 +1,8 @@
+// bubble-sort style control flow on scalars
+for (p = 0; p < n - 1; p = p + 1) {
+    swapped = 0;
+    for (q = 0; q < n - p - 1; q = q + 1) {
+        if (x > y) { tmp = x; x = y; y = tmp; swapped = 1; }
+    }
+    if (swapped == 0) break;
+}
